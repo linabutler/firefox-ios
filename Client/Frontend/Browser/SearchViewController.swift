@@ -16,6 +16,7 @@ private enum SearchListSection: Int, CaseIterable {
     case openedTabs
     case bookmarksAndHistory
     case searchHighlights
+    case merinoSuggestions
 }
 
 private struct SearchViewControllerUX {
@@ -69,6 +70,7 @@ class SearchViewController: SiteTableViewController,
     private var filteredOpenedTabs = [Tab]()
     private var tabManager: TabManager
     private var searchHighlights = [HighlightItem]()
+    private var merinoSuggestions = [MerinoSuggestion]()
     private var highlightManager: HistoryHighlightsManagerProtocol
 
     // Views for displaying the bottom scrollable search engine list. searchEngineScrollView is the
@@ -85,6 +87,13 @@ class SearchViewController: SiteTableViewController,
         return UIImage(named: "sync_open_tab")!
     }()
 
+    private let merinoClientQueue: DispatchQueueInterface
+    private var merinoClientFetchWork: DispatchWorkItem?
+    private lazy var merinoClient: MerinoClient = {
+        let settings = MerinoClientSettings(server: .production, sessionDurationMs: 5000)
+        return try! MerinoClient(settings: settings)
+    }()
+
     var suggestions: [String]? = []
     var savedQuery: String = ""
     var searchFeature: FeatureHolder<Search>
@@ -96,17 +105,20 @@ class SearchViewController: SiteTableViewController,
             || !filteredOpenedTabs.isEmpty
             || !filteredRemoteClientTabs.isEmpty
             || !searchHighlights.isEmpty
+            || !merinoSuggestions.isEmpty
     }
 
     init(profile: Profile,
          viewModel: SearchViewModel,
          tabManager: TabManager,
          featureConfig: FeatureHolder<Search> = FxNimbus.shared.features.search,
-         highlightManager: HistoryHighlightsManagerProtocol = HistoryHighlightsManager()) {
+         highlightManager: HistoryHighlightsManagerProtocol = HistoryHighlightsManager(),
+         merinoClientQueue: DispatchQueueInterface = DispatchQueue(label: "MerinoClient")) {
         self.viewModel = viewModel
         self.tabManager = tabManager
         self.searchFeature = featureConfig
         self.highlightManager = highlightManager
+        self.merinoClientQueue = merinoClientQueue
         super.init(profile: profile)
 
         if #available(iOS 15.0, *) {
@@ -160,6 +172,27 @@ class SearchViewController: SiteTableViewController,
             self.searchHighlights = results
             self.tableView.reloadData()
         }
+    }
+
+    private func loadMerinoSuggestions() {
+        self.merinoClientFetchWork?.cancel()
+
+        let searchQuery = self.searchQuery
+        let fetchWork = DispatchWorkItem { [weak self] in
+            guard let suggestions = try? self?.merinoClient.fetch(query: searchQuery) else {
+                return
+            }
+            DispatchQueue.main.async {
+                guard let self = self, self.searchQuery == searchQuery else {
+                    return
+                }
+                self.merinoSuggestions = suggestions
+                self.merinoClientFetchWork = nil
+                self.tableView.reloadData()
+            }
+        }
+        self.merinoClientFetchWork = fetchWork
+        merinoClientQueue.asyncAfter(deadline: .now(), execute: fetchWork)
     }
 
     func dynamicFontChanged(_ notification: Notification) {
@@ -469,6 +502,7 @@ class SearchViewController: SiteTableViewController,
         }
 
         loadSearchHighlights()
+        loadMerinoSuggestions()
 
         let tempSearchQuery = searchQuery
         suggestClient?.query(searchQuery, callback: { suggestions, error in
@@ -550,6 +584,11 @@ class SearchViewController: SiteTableViewController,
                 recordSearchListSelectionTelemetry(type: .searchHighlights)
                 searchDelegate?.searchViewController(self, didSelectURL: url, searchTerm: nil)
             }
+        case .merinoSuggestions:
+            let suggestion = merinoSuggestions[indexPath.row]
+            if let url = URL(string: suggestion.url) {
+                searchDelegate?.searchViewController(self, didSelectURL: url, searchTerm: nil)
+            }
         }
     }
 
@@ -610,6 +649,8 @@ class SearchViewController: SiteTableViewController,
             return data.count
         case .searchHighlights:
             return searchHighlights.count
+        case .merinoSuggestions:
+            return merinoSuggestions.count
         }
     }
 
@@ -660,6 +701,7 @@ class SearchViewController: SiteTableViewController,
                 }
                 oneLineCell.leftImageView.contentMode = .center
                 oneLineCell.leftImageView.layer.borderWidth = 0
+                oneLineCell.leftImageView.layer.borderColor = nil
                 oneLineCell.leftImageView.image = UIImage(named: SearchViewControllerUX.SearchImage)
                 oneLineCell.leftImageView.tintColor = themeManager.currentTheme.colors.iconPrimary
                 oneLineCell.leftImageView.backgroundColor = nil
@@ -727,6 +769,41 @@ class SearchViewController: SiteTableViewController,
             twoLineCell.leftImageView.setFavicon(FaviconImageViewModel(siteURLString: site.url))
             twoLineCell.accessoryView = nil
             cell = twoLineCell
+        case .merinoSuggestions:
+            let suggestion = merinoSuggestions[indexPath.row]
+
+            if suggestion.isSponsored {
+                let generationNumber = twoLineCell.generationNumber
+
+                twoLineCell.titleLabel.text = suggestion.title
+                twoLineCell.descriptionLabel.isHidden = false
+                twoLineCell.descriptionLabel.text = .Search.SponsoredSuggestionLabel
+                twoLineCell.leftOverlayImageView.image = nil
+                twoLineCell.leftImageView.contentMode = .center
+                twoLineCell.leftImageView.layer.borderWidth = SearchViewControllerUX.IconBorderWidth
+                twoLineCell.leftImageView.layer.borderColor = SearchViewControllerUX.IconBorderColor.cgColor
+                if let iconURL = suggestion.icon.flatMap({ URL(string: $0) }) {
+                    twoLineCell.leftImageView.setFavicon(FaviconImageViewModel(faviconURL: iconURL))
+                } else {
+                    twoLineCell.leftImageView.setFavicon(FaviconImageViewModel(siteURLString: suggestion.url))
+                }
+                twoLineCell.accessoryView = nil
+                cell = twoLineCell
+                break
+            }
+
+            let generationNumber = oneLineCell.generationNumber
+            oneLineCell.titleLabel.text = suggestion.title
+            oneLineCell.leftImageView.contentMode = .center
+            oneLineCell.leftImageView.layer.borderWidth = SearchViewControllerUX.IconBorderWidth
+            oneLineCell.leftImageView.layer.borderColor = SearchViewControllerUX.IconBorderColor.cgColor
+            if let iconURL = suggestion.icon.flatMap({ URL(string: $0) }) {
+                oneLineCell.leftImageView.setFavicon(FaviconImageViewModel(faviconURL: iconURL))
+            } else {
+                oneLineCell.leftImageView.setFavicon(FaviconImageViewModel(siteURLString: suggestion.url))
+            }
+            oneLineCell.accessoryView = nil
+            cell = oneLineCell
         }
 
         // We need to set the correct theme on the cells when the initial display happens
@@ -798,6 +875,8 @@ private extension SearchViewController {
                         TelemetryWrapper.EventValue.historyItem.rawValue
         case .searchHighlights:
             extra = TelemetryWrapper.EventValue.searchHighlights.rawValue
+        case .merinoSuggestions:
+            return
         }
 
         TelemetryWrapper.recordEvent(category: .action,
