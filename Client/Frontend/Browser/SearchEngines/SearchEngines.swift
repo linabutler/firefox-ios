@@ -33,11 +33,15 @@ class SearchEngines {
     private let showSearchSuggestionsOptIn = "search.suggestions.showOptIn"
     private let showSearchSuggestions = "search.suggestions.show"
     private let customSearchEnginesFileName = "customEngines.plist"
+    private let showSponsoredSuggestions = "search.suggest.showSponsored"
+    private let showNonSponsoredSuggestions = "search.suggest.showNonSponsored"
 
     init(prefs: Prefs, files: FileAccessor) {
         self.prefs = prefs
         // By default, show search suggestions
         self.shouldShowSearchSuggestions = prefs.boolForKey(showSearchSuggestions) ?? true
+        self.shouldShowSponsoredSuggestions = prefs.boolForKey(showSponsoredSuggestions) ?? false
+        self.shouldShowNonSponsoredSuggestions = prefs.boolForKey(showNonSponsoredSuggestions) ?? false
         self.fileAccessor = files
         self.disabledEngines = getDisabledEngines()
         self.orderedEngines = getOrderedEngines()
@@ -82,6 +86,18 @@ class SearchEngines {
     var shouldShowSearchSuggestions: Bool {
         didSet {
             self.prefs.setObject(shouldShowSearchSuggestions, forKey: showSearchSuggestions)
+        }
+    }
+
+    var shouldShowSponsoredSuggestions: Bool {
+        didSet {
+            self.prefs.setObject(shouldShowSponsoredSuggestions, forKey: showSponsoredSuggestions)
+        }
+    }
+
+    var shouldShowNonSponsoredSuggestions: Bool {
+        didSet {
+            self.prefs.setObject(shouldShowNonSponsoredSuggestions, forKey: showNonSponsoredSuggestions)
         }
     }
 

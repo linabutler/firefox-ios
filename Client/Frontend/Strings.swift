@@ -4324,6 +4324,16 @@ extension String {
         tableName: nil,
         value: nil,
         comment: "Title for quick-search engines settings section.")
+    public static let SearchSettingsShowSponsoredSuggestionsLabel = MZLocalizedString(
+        "SearchSettings.Suggest.ShowSponsoredLabel.v999",
+        tableName: nil,
+        value: "Show suggestions from sponsors",
+        comment: "Label for setting to show sponsored suggestions from the Firefox Suggest Service.")
+    public static let SearchSettingsShowNonSponsoredSuggestionsLabel = MZLocalizedString(
+        "SearchSettings.Suggest.ShowNonSponsoredLabel.v999",
+        tableName: nil,
+        value: "Show suggestions from the web",
+        comment: "Label for setting to show non-sponsored suggestions from the Firefox Suggest Service.")
 }
 
 // MARK: - SettingsContent

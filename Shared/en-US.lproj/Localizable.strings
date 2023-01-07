@@ -1003,6 +1003,9 @@
 /* Title for quick-search engines settings section. */
 "Quick-Search Engines" = "Quick-Search Engines";
 
+"SearchSettings.Suggest.ShowSponsoredLabel.v999" = "Show suggestions from sponsors";
+"SearchSettings.Suggest.ShowNonSponsoredLabel.v999" = "Show suggestions from the web";
+
 /* A label indicating the action that a user can rate the Firefox app in the App store. */
 "Ratings.Settings.RateOnAppStore" = "Rate on App Store";
 

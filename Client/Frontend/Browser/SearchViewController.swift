@@ -177,9 +177,17 @@ class SearchViewController: SiteTableViewController,
     private func loadMerinoSuggestions() {
         self.merinoClientFetchWork?.cancel()
 
+        let showSponsored = searchEngines.shouldShowSponsoredSuggestions
+        let showNonSponsored = searchEngines.shouldShowNonSponsoredSuggestions
+        guard showSponsored || showNonSponsored else {
+            return
+        }
+
         let searchQuery = self.searchQuery
         let fetchWork = DispatchWorkItem { [weak self] in
-            guard let suggestions = try? self?.merinoClient.fetch(query: searchQuery) else {
+            guard let suggestions = try? self?.merinoClient.fetch(query: searchQuery).filter({
+                (showSponsored && $0.isSponsored) || (showNonSponsored && !$0.isSponsored)
+            }) else {
                 return
             }
             DispatchQueue.main.async {
