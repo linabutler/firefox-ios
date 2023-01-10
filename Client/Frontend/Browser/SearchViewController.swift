@@ -186,7 +186,7 @@ class SearchViewController: SiteTableViewController,
         let searchQuery = self.searchQuery
         let fetchWork = DispatchWorkItem { [weak self] in
             guard let suggestions = try? self?.merinoClient.fetch(query: searchQuery).filter({
-                (showSponsored && $0.isSponsored) || (showNonSponsored && !$0.isSponsored)
+                (showSponsored && $0.details.isSponsored) || (showNonSponsored && !$0.details.isSponsored)
             }) else {
                 return
             }
@@ -594,7 +594,7 @@ class SearchViewController: SiteTableViewController,
             }
         case .merinoSuggestions:
             let suggestion = merinoSuggestions[indexPath.row]
-            if let url = URL(string: suggestion.url) {
+            if let url = URL(string: suggestion.details.url) {
                 searchDelegate?.searchViewController(self, didSelectURL: url, searchTerm: nil)
             }
         }
@@ -780,35 +780,60 @@ class SearchViewController: SiteTableViewController,
         case .merinoSuggestions:
             let suggestion = merinoSuggestions[indexPath.row]
 
-            if suggestion.isSponsored {
-                let generationNumber = twoLineCell.generationNumber
+            let title: SearchSuggestionTitleLabel
+            switch suggestion {
+            case .adm(let details, _, let fullKeyword, _, _, _):
+                let titleText = String(format: .Search.MerinoSuggestionTitle, fullKeyword, details.title)
+                guard Locale.current.languageCode == "en", fullKeyword != savedQuery else {
+                    title = .text(titleText)
+                    break
+                }
+                guard let fullKeywordRange = titleText.range(of: fullKeyword),
+                      let searchQueryRange = titleText.range(of: savedQuery, options: [.caseInsensitive], range: fullKeywordRange) else {
+                    title = .text(titleText)
+                    break
+                }
+                title = .attributedText(titleText.attributedText(boldIn: searchQueryRange.upperBound..<fullKeywordRange.upperBound, font: DynamicFontHelper().DefaultStandardFont))
+            case .topPicks(let details, _, _), .other(let details, _):
+                title = .text(details.title)
+            }
 
-                twoLineCell.titleLabel.text = suggestion.title
+            if suggestion.details.isSponsored {
+                switch title {
+                case let .text(text):
+                    twoLineCell.titleLabel.text = text
+                case let .attributedText(attributedText):
+                    twoLineCell.titleLabel.attributedText = attributedText
+                }
                 twoLineCell.descriptionLabel.isHidden = false
-                twoLineCell.descriptionLabel.text = .Search.SponsoredSuggestionLabel
+                twoLineCell.descriptionLabel.text = .Search.SponsoredSuggestionDescription
                 twoLineCell.leftOverlayImageView.image = nil
                 twoLineCell.leftImageView.contentMode = .center
                 twoLineCell.leftImageView.layer.borderWidth = SearchViewControllerUX.IconBorderWidth
                 twoLineCell.leftImageView.layer.borderColor = SearchViewControllerUX.IconBorderColor.cgColor
-                if let iconURL = suggestion.icon.flatMap({ URL(string: $0) }) {
+                if let iconURL = suggestion.details.icon.flatMap({ URL(string: $0) }) {
                     twoLineCell.leftImageView.setFavicon(FaviconImageViewModel(faviconURL: iconURL))
                 } else {
-                    twoLineCell.leftImageView.setFavicon(FaviconImageViewModel(siteURLString: suggestion.url))
+                    twoLineCell.leftImageView.setFavicon(FaviconImageViewModel(siteURLString: suggestion.details.url))
                 }
                 twoLineCell.accessoryView = nil
                 cell = twoLineCell
                 break
             }
 
-            let generationNumber = oneLineCell.generationNumber
-            oneLineCell.titleLabel.text = suggestion.title
+            switch title {
+            case let .text(text):
+                oneLineCell.titleLabel.text = text
+            case let .attributedText(attributedText):
+                oneLineCell.titleLabel.attributedText = attributedText
+            }
             oneLineCell.leftImageView.contentMode = .center
             oneLineCell.leftImageView.layer.borderWidth = SearchViewControllerUX.IconBorderWidth
             oneLineCell.leftImageView.layer.borderColor = SearchViewControllerUX.IconBorderColor.cgColor
-            if let iconURL = suggestion.icon.flatMap({ URL(string: $0) }) {
+            if let iconURL = suggestion.details.icon.flatMap({ URL(string: $0) }) {
                 oneLineCell.leftImageView.setFavicon(FaviconImageViewModel(faviconURL: iconURL))
             } else {
-                oneLineCell.leftImageView.setFavicon(FaviconImageViewModel(siteURLString: suggestion.url))
+                oneLineCell.leftImageView.setFavicon(FaviconImageViewModel(siteURLString: suggestion.details.url))
             }
             oneLineCell.accessoryView = nil
             cell = oneLineCell
@@ -971,5 +996,32 @@ fileprivate extension String {
 private class ButtonScrollView: UIScrollView {
     override func touchesShouldCancel(in view: UIView) -> Bool {
         return true
+    }
+}
+
+fileprivate extension MerinoSuggestion {
+    var details: MerinoSuggestionDetails {
+        switch self {
+        case .adm(let details, _, _, _, _, _):
+            return details
+        case .topPicks(let details, _, _):
+            return details
+        case .other(let details, _):
+            return details
+        }
+    }
+}
+
+enum SearchSuggestionTitleLabel {
+    case text(String)
+    case attributedText(NSAttributedString)
+
+    var string: String {
+        switch self {
+        case let .text(text):
+            return text
+        case let .attributedText(attributedText):
+            return attributedText.string
+        }
     }
 }
