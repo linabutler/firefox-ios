@@ -9,7 +9,7 @@ protocol SearchEnginePickerDelegate: AnyObject {
     func searchEnginePicker(_ searchEnginePicker: SearchEnginePicker?, didSelectSearchEngine engine: OpenSearchEngine?)
 }
 
-class SearchSettingsTableViewController: ThemedTableViewController {
+class SearchSettingsTableViewController: ThemedTableViewController, FeatureFlaggable {
     fileprivate let SectionDefault = 0
     fileprivate let ItemDefaultEngine = 0
     fileprivate let ItemDefaultSuggestions = 1
@@ -20,7 +20,9 @@ class SearchSettingsTableViewController: ThemedTableViewController {
     fileprivate let ItemShowNonSponsoredSuggestions = 0
     fileprivate let ItemShowSponsoredSuggestions = 1
     fileprivate let NumberOfItemsInSectionSuggest = 2
-    fileprivate let NumberOfSections = 3
+    fileprivate var NumberOfSections: Int {
+        return featureFlags.isFeatureEnabled(.merino, checking: .userOnly) ? 3 : 2
+    }
     fileprivate let IconSize = CGSize(width: OpenSearchEngine.UX.preferredIconSize,
                                       height: OpenSearchEngine.UX.preferredIconSize)
 

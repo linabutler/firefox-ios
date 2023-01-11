@@ -90,7 +90,8 @@ class SearchViewController: SiteTableViewController,
     private let merinoClientQueue: DispatchQueueInterface
     private var merinoClientFetchWork: DispatchWorkItem?
     private lazy var merinoClient: MerinoClient = {
-        let settings = MerinoClientSettings(server: .production, sessionDurationMs: 5000)
+        let server = profile.prefs.stringForKey(PrefsKeys.CustomMerinoServerURL).map(MerinoServer.custom(url:)) ?? .production
+        let settings = MerinoClientSettings(server: server, sessionDurationMs: 5000)
         return try! MerinoClient(settings: settings)
     }()
 
@@ -179,7 +180,8 @@ class SearchViewController: SiteTableViewController,
 
         let showSponsored = searchEngines.shouldShowSponsoredSuggestions
         let showNonSponsored = searchEngines.shouldShowNonSponsoredSuggestions
-        guard showSponsored || showNonSponsored else {
+        guard featureFlags.isFeatureEnabled(.merino, checking: .userOnly),
+              showSponsored || showNonSponsored else {
             return
         }
 

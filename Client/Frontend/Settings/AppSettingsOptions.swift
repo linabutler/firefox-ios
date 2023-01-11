@@ -1381,3 +1381,25 @@ class SearchBarSetting: Setting {
         navigationController?.pushViewController(viewController, animated: true)
     }
 }
+
+class MerinoSettings: HiddenSetting {
+    let profile: Profile
+
+    override var accessoryView: UIImageView? { SettingDisclosureUtility.buildDisclosureIndicator(theme: theme) }
+
+    override var title: NSAttributedString? {
+        // Not localized for now.
+        NSAttributedString(string: "Merino", attributes: [NSAttributedString.Key.foregroundColor: theme.colors.textPrimary])
+    }
+
+    override init(settings: SettingsTableViewController) {
+        self.profile = settings.profile
+        super.init(settings: settings)
+    }
+
+    override func onClick(_ navigationController: UINavigationController?) {
+        let viewController = MerinoSettingsViewController()
+        viewController.profile = profile
+        navigationController?.pushViewController(viewController, animated: true)
+    }
+}
