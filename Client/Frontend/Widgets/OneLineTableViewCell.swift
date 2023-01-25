@@ -55,6 +55,8 @@ class OneLineTableViewCell: UITableViewCell,
         separatorLine.backgroundColor = UIColor.Photon.Grey40
     }
 
+    var generationNumber = 1
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
 
@@ -125,6 +127,8 @@ class OneLineTableViewCell: UITableViewCell,
         separatorInset = defaultSeparatorInset
         titleLabel.text = nil
         leftImageView.image = nil
+
+        generationNumber += 1
     }
 
     // To simplify setup, OneLineTableViewCell now has a viewModel

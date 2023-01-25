@@ -813,8 +813,21 @@ class SearchViewController: SiteTableViewController,
                 twoLineCell.leftImageView.contentMode = .center
                 twoLineCell.leftImageView.layer.borderWidth = SearchViewControllerUX.IconBorderWidth
                 twoLineCell.leftImageView.layer.borderColor = SearchViewControllerUX.IconBorderColor.cgColor
+                let currentGenerationNumber = twoLineCell.generationNumber
                 if let iconURL = suggestion.details.icon.flatMap({ URL(string: $0) }) {
-                    twoLineCell.leftImageView.setFavicon(FaviconImageViewModel(faviconURL: iconURL))
+                    DefaultImageLoadingHandler.shared.getImageFromCacheOrDownload(with: iconURL,
+                                                                                  limit: 0) { [weak twoLineCell] image, error in
+                        guard error == nil, let image = image else {
+                            return
+                        }
+                        DispatchQueue.main.async {
+                            guard twoLineCell?.generationNumber == currentGenerationNumber else {
+                                return
+                            }
+                            twoLineCell?.leftImageView.image = image.createScaled(CGSize(width: SearchViewControllerUX.IconSize,
+                                                                                         height: SearchViewControllerUX.IconSize))
+                        }
+                    }
                 } else {
                     twoLineCell.leftImageView.setFavicon(FaviconImageViewModel(siteURLString: suggestion.details.url))
                 }
@@ -832,8 +845,21 @@ class SearchViewController: SiteTableViewController,
             oneLineCell.leftImageView.contentMode = .center
             oneLineCell.leftImageView.layer.borderWidth = SearchViewControllerUX.IconBorderWidth
             oneLineCell.leftImageView.layer.borderColor = SearchViewControllerUX.IconBorderColor.cgColor
+            let currentGenerationNumber = oneLineCell.generationNumber
             if let iconURL = suggestion.details.icon.flatMap({ URL(string: $0) }) {
-                oneLineCell.leftImageView.setFavicon(FaviconImageViewModel(faviconURL: iconURL))
+                DefaultImageLoadingHandler.shared.getImageFromCacheOrDownload(with: iconURL,
+                                                                              limit: 0) { [weak oneLineCell] image, error in
+                    guard error == nil, let image = image else {
+                        return
+                    }
+                    DispatchQueue.main.async {
+                        guard oneLineCell?.generationNumber == currentGenerationNumber else {
+                            return
+                        }
+                        oneLineCell?.leftImageView.image = image.createScaled(CGSize(width: SearchViewControllerUX.IconSize,
+                                                                                     height: SearchViewControllerUX.IconSize))
+                    }
+                }
             } else {
                 oneLineCell.leftImageView.setFavicon(FaviconImageViewModel(siteURLString: suggestion.details.url))
             }
