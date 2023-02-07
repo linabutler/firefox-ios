@@ -87,8 +87,16 @@ class SearchViewController: SiteTableViewController,
         return UIImage(named: "sync_open_tab")!
     }()
 
+    // A private serial queue used to make blocking Merino client calls.
     private let merinoClientQueue: DispatchQueueInterface
+
+    // A work item for the currently in-flight call to fetch Merino suggestions,
+    // scheduled on the Merino client queue. Used to cancel pending fetches when
+    // the search query changes. Should only be accessed on the main thread.
     private var merinoClientFetchWork: DispatchWorkItem?
+
+    // A memoized Merino client. Should only be accessed on the Merino client
+    // queue.
     private lazy var merinoClient: MerinoClient = {
         let server = profile.prefs.stringForKey(PrefsKeys.CustomMerinoServerURL).map(MerinoServer.custom(url:)) ?? .production
         let settings = MerinoClientSettings(server: server, sessionDurationMs: 5000)
@@ -182,22 +190,31 @@ class SearchViewController: SiteTableViewController,
         let showNonSponsored = searchEngines.shouldShowNonSponsoredSuggestions
         guard featureFlags.isFeatureEnabled(.merino, checking: .userOnly),
               showSponsored || showNonSponsored else {
+            // Don't query Merino if the entire feature is disabled, or if the
+            // user has turned off all Merino suggestions.
             return
         }
 
         let searchQuery = self.searchQuery
-        let fetchWork = DispatchWorkItem { [weak self] in
+        let fetchWork = DispatchWorkItem(qos: .userInitiated) { [weak self] in
             guard let suggestions = try? self?.merinoClient.fetch(query: searchQuery).filter({
+                // Only include suggestions that the user has turned on in
+                // Search settings.
                 (showSponsored && $0.details.isSponsored) || (showNonSponsored && !$0.details.isSponsored)
             }) else {
                 return
             }
             DispatchQueue.main.async {
-                guard let self = self, self.searchQuery == searchQuery else {
+                guard let self else {
+                    return
+                }
+                self.merinoClientFetchWork = nil
+                guard self.searchQuery == searchQuery else {
+                    // The user has changed the search query since we made the
+                    // request, so the suggestions we fetched are now stale.
                     return
                 }
                 self.merinoSuggestions = suggestions
-                self.merinoClientFetchWork = nil
                 self.tableView.reloadData()
             }
         }
@@ -1040,16 +1057,11 @@ fileprivate extension MerinoSuggestion {
     }
 }
 
+/**
+ * The title label for a search suggestion cell is either a plain text string,
+ * or an attributed string with the remainder of the search keyword bolded.
+ */
 enum SearchSuggestionTitleLabel {
     case text(String)
     case attributedText(NSAttributedString)
-
-    var string: String {
-        switch self {
-        case let .text(text):
-            return text
-        case let .attributedText(attributedText):
-            return attributedText.string
-        }
-    }
 }
