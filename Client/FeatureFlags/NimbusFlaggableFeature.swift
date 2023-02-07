@@ -19,6 +19,7 @@ enum NimbusFeatureFlagID: String, CaseIterable {
     case inactiveTabs
     case jumpBackIn
     case jumpBackInSyncedTab
+    case merino
     case onboardingUpgrade
     case onboardingFreshInstall
     case pocket
@@ -84,6 +85,8 @@ struct NimbusFlaggableFeature: HasNimbusSearchBar {
             return FlagKeys.TopSiteSection
         case .wallpapers:
             return FlagKeys.CustomWallpaper
+        case .merino:
+            return FlagKeys.Merino
 
         // Cases where users do not have the option to manipulate a setting.
         case .contextualHintForJumpBackInSyncedTab,

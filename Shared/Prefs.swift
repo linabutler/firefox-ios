@@ -64,6 +64,7 @@ public struct PrefsKeys {
         public static let SponsoredShortcuts = "SponsoredShortcutsUserPrefsKey"
         public static let TabTrayGroups = "TabTrayGroupsUserPrefsKey"
         public static let TopSiteSection = "TopSitesUserPrefsKey"
+        public static let Merino = "MerinoUserPrefsKey"
     }
 
     public struct LegacyFeatureFlags {
@@ -134,6 +135,8 @@ public struct PrefsKeys {
 
     // The last timestamp we polled FxA for missing send tabs
     public static let PollCommandsTimestamp = "PollCommandsTimestamp"
+
+    public static let CustomMerinoServerURL = "CustomMerinoServerURL"
 }
 
 public struct PrefsDefaults {

@@ -9,14 +9,20 @@ protocol SearchEnginePickerDelegate: AnyObject {
     func searchEnginePicker(_ searchEnginePicker: SearchEnginePicker?, didSelectSearchEngine engine: OpenSearchEngine?)
 }
 
-class SearchSettingsTableViewController: ThemedTableViewController {
+class SearchSettingsTableViewController: ThemedTableViewController, FeatureFlaggable {
     fileprivate let SectionDefault = 0
     fileprivate let ItemDefaultEngine = 0
     fileprivate let ItemDefaultSuggestions = 1
     fileprivate let ItemAddCustomSearch = 2
     fileprivate let NumberOfItemsInSectionDefault = 2
     fileprivate let SectionOrder = 1
-    fileprivate let NumberOfSections = 2
+    fileprivate let SectionSuggest = 2
+    fileprivate let ItemShowNonSponsoredSuggestions = 0
+    fileprivate let ItemShowSponsoredSuggestions = 1
+    fileprivate let NumberOfItemsInSectionSuggest = 2
+    fileprivate var NumberOfSections: Int {
+        return featureFlags.isFeatureEnabled(.merino, checking: .userOnly) ? 3 : 2
+    }
     fileprivate let IconSize = CGSize(width: OpenSearchEngine.UX.preferredIconSize,
                                       height: OpenSearchEngine.UX.preferredIconSize)
 
@@ -103,7 +109,7 @@ class SearchSettingsTableViewController: ThemedTableViewController {
                 // Should not happen.
                 break
             }
-        } else {
+        } else if indexPath.section == SectionOrder {
             // The default engine is not a quick search engine.
             let index = indexPath.item + 1
             if index < model.orderedEngines.count {
@@ -132,6 +138,30 @@ class SearchSettingsTableViewController: ThemedTableViewController {
                 cell.accessibilityIdentifier = AccessibilityIdentifiers.Settings.Search.customEngineViewButton
                 cell.textLabel?.text = .SettingsAddCustomEngine
             }
+        } else if indexPath.section == SectionSuggest {
+            switch indexPath.item {
+            case ItemShowSponsoredSuggestions:
+                cell.textLabel?.text = .SearchSettingsShowSponsoredSuggestionsLabel
+                cell.textLabel?.numberOfLines = 0
+                let toggle = UISwitch()
+                toggle.onTintColor = themeManager.currentTheme.colors.actionPrimary
+                toggle.addTarget(self, action: #selector(didToggleSponsoredSuggestions), for: .valueChanged)
+                toggle.isOn = model.shouldShowSponsoredSuggestions
+                cell.editingAccessoryView = toggle
+                cell.selectionStyle = .none
+            case ItemShowNonSponsoredSuggestions:
+                cell.textLabel?.text = .SearchSettingsShowNonSponsoredSuggestionsLabel
+                cell.textLabel?.numberOfLines = 0
+                let toggle = UISwitch()
+                toggle.onTintColor = themeManager.currentTheme.colors.actionPrimary
+                toggle.addTarget(self, action: #selector(didToggleNonSponsoredSuggestions), for: .valueChanged)
+                toggle.isOn = model.shouldShowNonSponsoredSuggestions
+                cell.editingAccessoryView = toggle
+                cell.selectionStyle = .none
+            default:
+                // Should not happen.
+                break
+            }
         }
 
         // So that the separator line goes all the way to the left edge.
@@ -147,10 +177,14 @@ class SearchSettingsTableViewController: ThemedTableViewController {
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         if section == SectionDefault {
             return NumberOfItemsInSectionDefault
-        } else {
+        } else if section == SectionOrder {
             // The first engine -- the default engine -- is not shown in the quick search engine list.
             // But the option to add Custom Engine is.
             return model.orderedEngines.count
+        } else if section == SectionSuggest {
+            return NumberOfItemsInSectionSuggest
+        } else {
+            return 0
         }
     }
 
@@ -163,7 +197,7 @@ class SearchSettingsTableViewController: ThemedTableViewController {
             searchEnginePicker.delegate = self
             searchEnginePicker.selectedSearchEngineName = model.defaultEngine.shortName
             navigationController?.pushViewController(searchEnginePicker, animated: true)
-        } else if indexPath.item + 1 == model.orderedEngines.count {
+        } else if indexPath.section == SectionOrder && indexPath.item + 1 == model.orderedEngines.count {
             let customSearchEngineForm = CustomSearchViewController()
             customSearchEngineForm.profile = self.profile
             customSearchEngineForm.successCallback = {
@@ -179,7 +213,7 @@ class SearchSettingsTableViewController: ThemedTableViewController {
 
     // Don't show delete button on the left.
     override func tableView(_ tableView: UITableView, editingStyleForRowAt indexPath: IndexPath) -> UITableViewCell.EditingStyle {
-        if indexPath.section == SectionDefault || indexPath.item + 1 == model.orderedEngines.count {
+        if indexPath.section == SectionDefault || indexPath.section == SectionSuggest || (indexPath.section == SectionOrder && indexPath.item + 1 == model.orderedEngines.count) {
             return UITableViewCell.EditingStyle.none
         }
 
@@ -224,8 +258,10 @@ class SearchSettingsTableViewController: ThemedTableViewController {
         var sectionTitle: String
         if section == SectionDefault {
             sectionTitle = .SearchSettingsDefaultSearchEngineTitle
-        } else {
+        } else if section == SectionOrder {
             sectionTitle = .SearchSettingsQuickSearchEnginesTitle
+        } else {
+            return nil
         }
         headerView.titleLabel.text = sectionTitle
 
@@ -240,7 +276,7 @@ class SearchSettingsTableViewController: ThemedTableViewController {
     }
 
     override func tableView(_ tableView: UITableView, canMoveRowAt indexPath: IndexPath) -> Bool {
-        if indexPath.section == SectionDefault || indexPath.item + 1 == model.orderedEngines.count {
+        if indexPath.section == SectionDefault || indexPath.section == SectionSuggest || (indexPath.section == SectionOrder && indexPath.item + 1 == model.orderedEngines.count) {
             return false
         } else {
             return true
@@ -260,6 +296,10 @@ class SearchSettingsTableViewController: ThemedTableViewController {
     override func tableView(_ tableView: UITableView, targetIndexPathForMoveFromRowAt sourceIndexPath: IndexPath, toProposedIndexPath proposedDestinationIndexPath: IndexPath) -> IndexPath {
         // You can't drag or drop on the default engine.
         if sourceIndexPath.section == SectionDefault || proposedDestinationIndexPath.section == SectionDefault {
+            return sourceIndexPath
+        }
+
+        if sourceIndexPath.section == SectionSuggest || proposedDestinationIndexPath.section == SectionSuggest {
             return sourceIndexPath
         }
 
@@ -325,6 +365,14 @@ extension SearchSettingsTableViewController {
     @objc func didToggleSearchSuggestions(_ toggle: UISwitch) {
         // Setting the value in settings dismisses any opt-in.
         model.shouldShowSearchSuggestions = toggle.isOn
+    }
+
+    @objc func didToggleSponsoredSuggestions(_ toggle: UISwitch) {
+        model.shouldShowSponsoredSuggestions = toggle.isOn
+    }
+
+    @objc func didToggleNonSponsoredSuggestions(_ toggle: UISwitch) {
+        model.shouldShowNonSponsoredSuggestions = toggle.isOn
     }
 
     func cancel() {

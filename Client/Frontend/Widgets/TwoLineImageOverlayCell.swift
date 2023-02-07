@@ -55,6 +55,8 @@ class TwoLineImageOverlayCell: UITableViewCell,
         label.textAlignment = .natural
     }
 
+    var generationNumber = 1
+
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         setupLayout()
@@ -130,5 +132,7 @@ class TwoLineImageOverlayCell: UITableViewCell,
                                       bottom: 0,
                                       right: 0)
         leftImageView.image = nil
+
+        generationNumber += 1
     }
 }

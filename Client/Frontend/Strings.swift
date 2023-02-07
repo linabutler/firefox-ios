@@ -753,6 +753,16 @@ extension String {
             tableName: nil,
             value: "Firefox Suggest",
             comment: "When making a new search from the awesome bar, suggestions appear to the user as they write new letters in their search. Different types of suggestions can appear. This string will be used as a header to separate Firefox suggestions from normal suggestions.")
+        public static let MerinoSuggestionTitle = MZLocalizedString(
+            "Search.MerinoSuggestionTitleLabel.v999",
+            tableName: nil,
+            value: "%1$@ — %2$@",
+            comment: "When making a new search from the awesome bar, suggestions appear to the user as they write new letters in their search. Different types of suggestions can appear. This string will be used to form the title for a suggestion from the Firefox Suggest Service, using the completed search keyword (1$) and suggested page title (2$).")
+        public static let SponsoredSuggestionDescription = MZLocalizedString(
+            "Search.SponsoredSuggestionDescriptionLabel.v999",
+            tableName: nil,
+            value: "Sponsored",
+            comment: "When making a new search from the awesome bar, suggestions appear to the user as they write new letters in their search. Different types of suggestions can appear. This string will be used as a label for sponsored suggestions from the Firefox Suggest Service.")
         public static let EngineSectionTitle = MZLocalizedString(
             "Search.EngineSection.Title.v108",
             tableName: "SearchHeaderTitle",
@@ -4319,6 +4329,16 @@ extension String {
         tableName: nil,
         value: nil,
         comment: "Title for quick-search engines settings section.")
+    public static let SearchSettingsShowSponsoredSuggestionsLabel = MZLocalizedString(
+        "SearchSettings.Suggest.ShowSponsoredLabel.v999",
+        tableName: nil,
+        value: "Show suggestions from sponsors",
+        comment: "Label for setting to show sponsored suggestions from the Firefox Suggest Service.")
+    public static let SearchSettingsShowNonSponsoredSuggestionsLabel = MZLocalizedString(
+        "SearchSettings.Suggest.ShowNonSponsoredLabel.v999",
+        tableName: nil,
+        value: "Show suggestions from the web",
+        comment: "Label for setting to show non-sponsored suggestions from the Firefox Suggest Service.")
 }
 
 // MARK: - SettingsContent

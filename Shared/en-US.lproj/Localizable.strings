@@ -1003,6 +1003,9 @@
 /* Title for quick-search engines settings section. */
 "Quick-Search Engines" = "Quick-Search Engines";
 
+"SearchSettings.Suggest.ShowSponsoredLabel.v999" = "Show suggestions from sponsors";
+"SearchSettings.Suggest.ShowNonSponsoredLabel.v999" = "Show suggestions from the web";
+
 /* A label indicating the action that a user can rate the Firefox app in the App store. */
 "Ratings.Settings.RateOnAppStore" = "Rate on App Store";
 
@@ -1086,6 +1089,11 @@
 
 /* When making a new search from the awesome bar, suggestions appear to the user as they write new letters in their search. Different types of suggestions can appear. This string will be used as a header to separate Firefox suggestions from normal suggestions. */
 "Search.SuggestSectionTitle.v102" = "Firefox Suggest";
+
+/* When making a new search from the awesome bar, suggestions appear to the user as they write new letters in their search. Different types of suggestions can appear. This string will be used to form the title for a suggestion from the Firefox Suggest Service, using the completed search keyword (1$) and suggested page title (2$). */
+"Search.MerinoSuggestionTitleLabel.v999" = "%1$@ — %2$@";
+/* When making a new search from the awesome bar, suggestions appear to the user as they write new letters in their search. Different types of suggestions can appear. This string will be used as a label for sponsored suggestions from the Firefox Suggest Service. */
+"Search.SponsoredSuggestionDescriptionLabel.v999" = "Sponsored";
 
 /* The message that asks the user to Add the search provider explaining where the search engine will appear */
 "Search.ThirdPartyEngines.AddMessage" = "The new search engine will appear in the quick search bar.";
