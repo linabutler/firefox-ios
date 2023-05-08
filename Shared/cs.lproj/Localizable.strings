@@ -343,9 +343,6 @@
 /* When a user taps and holds on an item from the Recently Visited section, this label will appear indicating the option to remove that item. */
 "FirefoxHome.RecentHistory.Remove" = "Odebrat";
 
-/* Label showing how many sites there is in a search group. %d represents a number */
-"FirefoxHomepage.Common.SitesCount.v101" = "Počet stránek: %d";
-
 /* The title for the Settings context menu action for sponsored tiles in the Firefox home page shortcuts section. Clicking this brings the users to the Shortcuts Settings. */
 "FirefoxHomepage.ContextualMenu.Settings.v101" = "Nastavení";
 
@@ -377,7 +374,7 @@
 "FxA.ManageAccount" = "Spravovat účet a zařízení";
 
 /* Label when no internet is present */
-"FxA.NoInternetConnection" = "Žádné připojení k internetu";
+"FxA.NoInternetConnection" = "Připojení k internetu není dostupné";
 
 /* FxA sign in view subtitle */
 "fxa.signin.camera-signin" = "Přihlásit se pomocí fotoaparátu";
@@ -934,9 +931,6 @@
 /* Accessibility label for the wallpaper onboarding modal displayed on top of the homepage. This describes to the user that which type of wallpaper they are seeing. */
 "Onboarding.Wallpaper.Accessibility.LimitedEdition.v106" = "Tapeta v limitované edici";
 
-/* Description for the wallpaper onboarding modal displayed on top of the homepage. This describes to the user that they can set a wallpaper. */
-"Onboarding.Wallpaper.Action.v106" = "Podívejte se na další tapety";
-
 /* Description for the wallpaper onboarding modal displayed on top of the homepage. This describes to the user that they can choose different wallpapers. */
 "Onboarding.Wallpaper.Description.v106" = "Vyberte si tapetu, která vás vyjadřuje.";
 
@@ -1221,9 +1215,6 @@
 
 /* The placeholder for URL Field when saving a custom search engine */
 "Settings.AddCustomEngine.URLPlaceholder" = "URL (vyhledávaný výraz nahraďte za %s)";
-
-/* Label used as an item in Settings screen. When touched, it will take user to credit card settings page to that will allows to add or modify saved credit cards to allow for autofill in a webpage. */
-"Settings.AutofillCreditCard.Title.v110" = "Automaticky vyplňovat informace o platební kartě";
 
 /* Button in Data Management that clears all items. */
 "Settings.ClearAllWebsiteData.Clear.Button" = "Smazat všechna data stránek";
@@ -1582,9 +1573,6 @@
 /* Dismiss button for the tracker protection alert. */
 "Settings.TrackingProtection.Alert.Button" = "OK, rozumím";
 
-/* Decription for the tracker protection alert. */
-"Settings.TrackingProtection.Alert.Description" = "Pokud nějaká stránka nebude fungovat správně, klepněte na ikonu štítu v adresním řádku a rozšířenou ochranu proti sledování na dané stránce vypněte.";
-
 /* Title for the tracker protection alert. */
 "Settings.TrackingProtection.Alert.Title" = "Pozor!";
 
@@ -1596,9 +1584,6 @@
 
 /* Additional information about your Enhanced Tracking Protection */
 "Settings.TrackingProtection.ProtectionCellFooter" = "Omezuje množství cílených reklam a zabrání inzerentům sledovat vás na internetu.";
-
-/* Footer information for tracker protection level. */
-"Settings.TrackingProtection.ProtectionLevel.Footer" = "Pokud nějaká stránka nebude fungovat správně, klepněte na ikonu štítu v adresním řádku a rozšířenou ochranu proti sledování na dané stránce vypněte.";
 
 /* Description for standard level tracker protection */
 "Settings.TrackingProtection.ProtectionLevelStandard.Description" = "Povoluje některé sledující reklamy pro správné fungování stránek.";
